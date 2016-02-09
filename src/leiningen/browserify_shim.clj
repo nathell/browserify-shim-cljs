@@ -9,14 +9,14 @@
 
 (defn collectRequires [forms requires]
   (-> (fn collectRequire [form]
-        (when  (list? form)  
-          (let  [[f m] form]  
+        (when  (list? form)
+          (let  [[f m] form]
             (when (-> f  (= 'js/require))
               (if (string? m)
-                (swap! requires conj m)    
-                (leiningen.core.main/warn 
-                  (str "Can only include static " 
-                       "strings for browserify, " 
+                (swap! requires conj m)
+                (leiningen.core.main/warn
+                  (str "Can only include static "
+                       "strings for browserify, "
                        "got " (pr-str m)))))))
         form)
     (clojure.walk/prewalk forms)))
@@ -24,7 +24,8 @@
 (defn browserify-shim
   "Create browserify bundle from all (js/require \"[module]\") is configured package"
   [project & args]
-  (doseq [{:keys [id source-paths]} (get-in project [:cljsbuild :builds])]
+  (doseq [[id build] (get-in project [:cljsbuild :builds])
+          :let [source-paths (:source-paths build)]]
     (when-let [outputfile (get-in project [:browserify-builds id])]
       (let [requires (atom #{})]
         (doseq [source-path source-paths]
